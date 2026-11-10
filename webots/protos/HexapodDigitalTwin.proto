@@ -1,0 +1,645 @@
+#VRML_SIM R2023b utf8
+# license: Apache License 2.0
+# Description: HEX-01 Industrial Hexapod Real-Time Digital Twin Robot Model (18-DOF)
+
+PROTO HexapodDigitalTwin [
+  field SFVec3f    translation         0 0 0.095
+  field SFRotation rotation            0 0 1 0
+  field SFString   name                "HEX-01"
+  field SFString   controller          "hexapod_controller"
+  field SFString   controllerArgs      ""
+  field SFString   customData          ""
+  field SFBool     supervisor          FALSE
+  field SFBool     synchronization     TRUE
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    controller IS controller
+    controllerArgs IS controllerArgs
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+
+    children [
+      # ------------------------------------------------------------------------
+      # ONBOARD SENSORS (IMU / ATTITUDE UNIT)
+      # ------------------------------------------------------------------------
+      InertialUnit {
+        name "imu"
+      }
+      Gyro {
+        name "gyro"
+      }
+      Accelerometer {
+        name "accelerometer"
+      }
+
+      # ------------------------------------------------------------------------
+      # MAIN CHASSIS ASSEMBLY
+      # ------------------------------------------------------------------------
+      # Upper Chassis Plate (Hexagonal CNC Anodized Aluminum)
+      Transform {
+        translation 0 0 0.018
+        children [
+          Shape {
+            appearance DEF MatChassisDark PBRAppearance {
+              baseColor 0.12 0.12 0.14
+              roughness 0.35
+              metalness 0.85
+            }
+            geometry Cylinder {
+              height 0.0035
+              radius 0.110
+              subdivision 6
+            }
+          }
+        ]
+      }
+
+      # Lower Chassis Plate (Hexagonal Base Support)
+      Transform {
+        translation 0 0 -0.018
+        children [
+          Shape {
+            appearance USE MatChassisDark
+            geometry Cylinder {
+              height 0.0035
+              radius 0.105
+              subdivision 6
+            }
+          }
+        ]
+      }
+
+      # Center Chassis Standoff Pillars (6 Aluminum Hex Standoffs)
+      DEF StandoffRing Group {
+        children [
+          Transform { translation  0.065  0.038 0 children [ DEF StandoffPillar Shape { appearance DEF MatMetalSilver PBRAppearance { baseColor 0.82 0.82 0.84 metalness 0.95 roughness 0.2 } geometry Cylinder { height 0.033 radius 0.003 } } ] }
+          Transform { translation -0.065  0.038 0 children [ USE StandoffPillar ] }
+          Transform { translation  0.065 -0.038 0 children [ USE StandoffPillar ] }
+          Transform { translation -0.065 -0.038 0 children [ USE StandoffPillar ] }
+          Transform { translation  0.000  0.075 0 children [ USE StandoffPillar ] }
+          Transform { translation  0.000 -0.075 0 children [ USE StandoffPillar ] }
+        ]
+      }
+
+      # Electronics Mounting Platform (MakerBoard ESP32 + MPU6050 PCB)
+      Transform {
+        translation 0 0 0.024
+        children [
+          # ESP32 Main Carrier Board
+          Shape {
+            appearance DEF MatPCBGreen PBRAppearance {
+              baseColor 0.05 0.28 0.18
+              roughness 0.3
+              metalness 0.1
+            }
+            geometry Box {
+              size 0.055 0.030 0.002
+            }
+          }
+          # ESP32-WROOM-32 Metal RF Shield Can
+          Transform {
+            translation -0.010 0 0.0025
+            children [
+              Shape {
+                appearance DEF MatRFShield PBRAppearance {
+                  baseColor 0.88 0.88 0.90
+                  metalness 0.98
+                  roughness 0.15
+                }
+                geometry Box {
+                  size 0.018 0.018 0.003
+                }
+              }
+            ]
+          }
+          # MPU6050 IMU Breakout Module (Blue PCB, Mounted Dead-Center)
+          Transform {
+            translation 0.014 0 0.0025
+            children [
+              Shape {
+                appearance DEF MatMPUBlue PBRAppearance {
+                  baseColor 0.08 0.22 0.55
+                  roughness 0.3
+                  metalness 0.15
+                }
+                geometry Box {
+                  size 0.015 0.020 0.002
+                }
+              }
+              # MPU6050 QFN-24 Sensor IC
+              Transform {
+                translation 0 0 0.0015
+                children [
+                  Shape {
+                    appearance DEF MatICBlack PBRAppearance {
+                      baseColor 0.05 0.05 0.05
+                      roughness 0.5
+                    }
+                    geometry Box {
+                      size 0.004 0.004 0.001
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 1: LEFT FRONT (LF) — Mounting Angle: +45 deg (+0.7854 rad)
+      # ========================================================================
+      Transform {
+        translation 0.0778 0.0778 0
+        rotation 0 0 1 0.7854
+        children [
+          # Coxa Servo Housing & Bracket Mount
+          Transform {
+            translation 0 0 0
+            children [
+              Shape {
+                appearance DEF MatServoBlack PBRAppearance {
+                  baseColor 0.14 0.14 0.15
+                  roughness 0.55
+                  metalness 0.2
+                }
+                geometry Box { size 0.023 0.012 0.028 }
+              }
+            ]
+          }
+          # Joint 1: LF_COXA (Yaw swing around Z-axis)
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0.012 0 0
+              minStop -1.047
+              maxStop  1.047
+            }
+            device [
+              RotationalMotor { name "lf_coxa" maxVelocity 10.47 maxTorque 0.25 }
+              PositionSensor  { name "lf_coxa_sensor" }
+            ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "lf_coxa_link"
+              contactMaterial "default"
+              children [
+                # Coxa Structural C-Bracket (Orange Anodized Aluminum)
+                Transform {
+                  translation 0.020 0 0
+                  children [
+                    Shape {
+                      appearance DEF MatAnodizedOrange PBRAppearance {
+                        baseColor 0.92 0.38 0.05
+                        metalness 0.85
+                        roughness 0.22
+                      }
+                      geometry Box { size 0.040 0.022 0.025 }
+                    }
+                  ]
+                }
+                # Joint 2: LF_FEMUR (Pitch lift around Y-axis)
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters {
+                        axis 0 1 0
+                        anchor 0 0 0
+                        minStop -1.309
+                        maxStop  1.309
+                      }
+                      device [
+                        RotationalMotor { name "lf_femur" maxVelocity 10.47 maxTorque 0.25 }
+                        PositionSensor  { name "lf_femur_sensor" }
+                      ]
+                      endPoint Solid {
+                        name "lf_femur_link"
+                        contactMaterial "default"
+                        children [
+                          # Femur Skeletonized Beam Link
+                          Transform {
+                            translation 0.0375 0 0
+                            children [
+                              Shape {
+                                appearance USE MatAnodizedOrange
+                                geometry Box { size 0.075 0.018 0.018 }
+                              }
+                            ]
+                          }
+                          # Joint 3: LF_TIBIA (Knee pitch around Y-axis)
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters {
+                                  axis 0 1 0
+                                  anchor 0 0 0
+                                  minStop -2.094
+                                  maxStop  0.262
+                                }
+                                device [
+                                  RotationalMotor { name "lf_tibia" maxVelocity 10.47 maxTorque 0.25 }
+                                  PositionSensor  { name "lf_tibia_sensor" }
+                                ]
+                                endPoint Solid {
+                                  name "lf_tibia_link"
+                                  contactMaterial "default"
+                                  children [
+                                    # Tibia Curved Arch Structural Link (Dark Graphite)
+                                    Transform {
+                                      translation 0.045 0 -0.050
+                                      rotation 0 1 0 -0.838
+                                      children [
+                                        Shape {
+                                          appearance DEF MatTibiaDark PBRAppearance {
+                                            baseColor 0.18 0.18 0.20
+                                            roughness 0.4
+                                            metalness 0.75
+                                          }
+                                          geometry Box { size 0.125 0.014 0.014 }
+                                        }
+                                      ]
+                                    }
+                                    # Rubber Foot Pad with TouchSensor
+                                    Transform {
+                                      translation 0.090 0 -0.100
+                                      children [
+                                        TouchSensor {
+                                          name "lf_foot"
+                                          children [
+                                            Shape {
+                                              appearance DEF MatRubber PBRAppearance {
+                                                baseColor 0.06 0.06 0.06
+                                                roughness 0.95
+                                                metalness 0.05
+                                              }
+                                              geometry Sphere { radius 0.012 }
+                                            }
+                                          ]
+                                          boundingObject Sphere { radius 0.012 }
+                                          physics Physics { mass 0.010 }
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                  boundingObject Transform {
+                                    translation 0.045 0 -0.050
+                                    rotation 0 1 0 -0.838
+                                    children [ Box { size 0.125 0.014 0.014 } ]
+                                  }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform {
+                          translation 0.0375 0 0
+                          children [ Box { size 0.075 0.018 0.018 } ]
+                        }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform {
+                translation 0.020 0 0
+                children [ Box { size 0.040 0.022 0.025 } ]
+              }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 2: LEFT MIDDLE (LM) — Mounting Angle: +90 deg (+1.5708 rad)
+      # ========================================================================
+      Transform {
+        translation 0 0.110 0
+        rotation 0 0 1 1.5708
+        children [
+          Transform {
+            translation 0 0 0
+            children [ Shape { appearance USE MatServoBlack geometry Box { size 0.023 0.012 0.028 } } ]
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters { axis 0 0 1 anchor 0.012 0 0 minStop -1.047 maxStop 1.047 }
+            device [ RotationalMotor { name "lm_coxa" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lm_coxa_sensor" } ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "lm_coxa_link"
+              children [
+                Transform { translation 0.020 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.040 0.022 0.025 } } ] }
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -1.309 maxStop 1.309 }
+                      device [ RotationalMotor { name "lm_femur" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lm_femur_sensor" } ]
+                      endPoint Solid {
+                        name "lm_femur_link"
+                        children [
+                          Transform { translation 0.0375 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.075 0.018 0.018 } } ] }
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -2.094 maxStop 0.262 }
+                                device [ RotationalMotor { name "lm_tibia" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lm_tibia_sensor" } ]
+                                endPoint Solid {
+                                  name "lm_tibia_link"
+                                  children [
+                                    Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Shape { appearance USE MatTibiaDark geometry Box { size 0.125 0.014 0.014 } } ] }
+                                    Transform { translation 0.090 0 -0.100 children [ TouchSensor { name "lm_foot" children [ Shape { appearance USE MatRubber geometry Sphere { radius 0.012 } } ] boundingObject Sphere { radius 0.012 } physics Physics { mass 0.010 } } ] }
+                                  ]
+                                  boundingObject Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Box { size 0.125 0.014 0.014 } ] }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform { translation 0.0375 0 0 children [ Box { size 0.075 0.018 0.018 } ] }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform { translation 0.020 0 0 children [ Box { size 0.040 0.022 0.025 } ] }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 3: LEFT REAR (LR) — Mounting Angle: +135 deg (+2.3562 rad)
+      # ========================================================================
+      Transform {
+        translation -0.0778 0.0778 0
+        rotation 0 0 1 2.3562
+        children [
+          Transform {
+            translation 0 0 0
+            children [ Shape { appearance USE MatServoBlack geometry Box { size 0.023 0.012 0.028 } } ]
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters { axis 0 0 1 anchor 0.012 0 0 minStop -1.047 maxStop 1.047 }
+            device [ RotationalMotor { name "lr_coxa" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lr_coxa_sensor" } ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "lr_coxa_link"
+              children [
+                Transform { translation 0.020 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.040 0.022 0.025 } } ] }
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -1.309 maxStop 1.309 }
+                      device [ RotationalMotor { name "lr_femur" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lr_femur_sensor" } ]
+                      endPoint Solid {
+                        name "lr_femur_link"
+                        children [
+                          Transform { translation 0.0375 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.075 0.018 0.018 } } ] }
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -2.094 maxStop 0.262 }
+                                device [ RotationalMotor { name "lr_tibia" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "lr_tibia_sensor" } ]
+                                endPoint Solid {
+                                  name "lr_tibia_link"
+                                  children [
+                                    Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Shape { appearance USE MatTibiaDark geometry Box { size 0.125 0.014 0.014 } } ] }
+                                    Transform { translation 0.090 0 -0.100 children [ TouchSensor { name "lr_foot" children [ Shape { appearance USE MatRubber geometry Sphere { radius 0.012 } } ] boundingObject Sphere { radius 0.012 } physics Physics { mass 0.010 } } ] }
+                                  ]
+                                  boundingObject Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Box { size 0.125 0.014 0.014 } ] }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform { translation 0.0375 0 0 children [ Box { size 0.075 0.018 0.018 } ] }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform { translation 0.020 0 0 children [ Box { size 0.040 0.022 0.025 } ] }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 4: RIGHT FRONT (RF) — Mounting Angle: -45 deg (-0.7854 rad)
+      # ========================================================================
+      Transform {
+        translation 0.0778 -0.0778 0
+        rotation 0 0 1 -0.7854
+        children [
+          Transform {
+            translation 0 0 0
+            children [ Shape { appearance USE MatServoBlack geometry Box { size 0.023 0.012 0.028 } } ]
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters { axis 0 0 1 anchor 0.012 0 0 minStop -1.047 maxStop 1.047 }
+            device [ RotationalMotor { name "rf_coxa" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rf_coxa_sensor" } ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "rf_coxa_link"
+              children [
+                Transform { translation 0.020 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.040 0.022 0.025 } } ] }
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -1.309 maxStop 1.309 }
+                      device [ RotationalMotor { name "rf_femur" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rf_femur_sensor" } ]
+                      endPoint Solid {
+                        name "rf_femur_link"
+                        children [
+                          Transform { translation 0.0375 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.075 0.018 0.018 } } ] }
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -2.094 maxStop 0.262 }
+                                device [ RotationalMotor { name "rf_tibia" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rf_tibia_sensor" } ]
+                                endPoint Solid {
+                                  name "rf_tibia_link"
+                                  children [
+                                    Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Shape { appearance USE MatTibiaDark geometry Box { size 0.125 0.014 0.014 } } ] }
+                                    Transform { translation 0.090 0 -0.100 children [ TouchSensor { name "rf_foot" children [ Shape { appearance USE MatRubber geometry Sphere { radius 0.012 } } ] boundingObject Sphere { radius 0.012 } physics Physics { mass 0.010 } } ] }
+                                  ]
+                                  boundingObject Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Box { size 0.125 0.014 0.014 } ] }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform { translation 0.0375 0 0 children [ Box { size 0.075 0.018 0.018 } ] }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform { translation 0.020 0 0 children [ Box { size 0.040 0.022 0.025 } ] }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 5: RIGHT MIDDLE (RM) — Mounting Angle: -90 deg (-1.5708 rad)
+      # ========================================================================
+      Transform {
+        translation 0 -0.110 0
+        rotation 0 0 1 -1.5708
+        children [
+          Transform {
+            translation 0 0 0
+            children [ Shape { appearance USE MatServoBlack geometry Box { size 0.023 0.012 0.028 } } ]
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters { axis 0 0 1 anchor 0.012 0 0 minStop -1.047 maxStop 1.047 }
+            device [ RotationalMotor { name "rm_coxa" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rm_coxa_sensor" } ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "rm_coxa_link"
+              children [
+                Transform { translation 0.020 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.040 0.022 0.025 } } ] }
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -1.309 maxStop 1.309 }
+                      device [ RotationalMotor { name "rm_femur" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rm_femur_sensor" } ]
+                      endPoint Solid {
+                        name "rm_femur_link"
+                        children [
+                          Transform { translation 0.0375 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.075 0.018 0.018 } } ] }
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -2.094 maxStop 0.262 }
+                                device [ RotationalMotor { name "rm_tibia" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rm_tibia_sensor" } ]
+                                endPoint Solid {
+                                  name "rm_tibia_link"
+                                  children [
+                                    Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Shape { appearance USE MatTibiaDark geometry Box { size 0.125 0.014 0.014 } } ] }
+                                    Transform { translation 0.090 0 -0.100 children [ TouchSensor { name "rm_foot" children [ Shape { appearance USE MatRubber geometry Sphere { radius 0.012 } } ] boundingObject Sphere { radius 0.012 } physics Physics { mass 0.010 } } ] }
+                                  ]
+                                  boundingObject Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Box { size 0.125 0.014 0.014 } ] }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform { translation 0.0375 0 0 children [ Box { size 0.075 0.018 0.018 } ] }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform { translation 0.020 0 0 children [ Box { size 0.040 0.022 0.025 } ] }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+
+      # ========================================================================
+      # LEG 6: RIGHT REAR (RR) — Mounting Angle: -135 deg (-2.3562 rad)
+      # ========================================================================
+      Transform {
+        translation -0.0778 -0.0778 0
+        rotation 0 0 1 -2.3562
+        children [
+          Transform {
+            translation 0 0 0
+            children [ Shape { appearance USE MatServoBlack geometry Box { size 0.023 0.012 0.028 } } ]
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters { axis 0 0 1 anchor 0.012 0 0 minStop -1.047 maxStop 1.047 }
+            device [ RotationalMotor { name "rr_coxa" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rr_coxa_sensor" } ]
+            endPoint Solid {
+              translation 0.012 0 0
+              name "rr_coxa_link"
+              children [
+                Transform { translation 0.020 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.040 0.022 0.025 } } ] }
+                Transform {
+                  translation 0.040 0 0
+                  children [
+                    HingeJoint {
+                      jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -1.309 maxStop 1.309 }
+                      device [ RotationalMotor { name "rr_femur" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rr_femur_sensor" } ]
+                      endPoint Solid {
+                        name "rr_femur_link"
+                        children [
+                          Transform { translation 0.0375 0 0 children [ Shape { appearance USE MatAnodizedOrange geometry Box { size 0.075 0.018 0.018 } } ] }
+                          Transform {
+                            translation 0.075 0 0
+                            children [
+                              HingeJoint {
+                                jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0 0 minStop -2.094 maxStop 0.262 }
+                                device [ RotationalMotor { name "rr_tibia" maxVelocity 10.47 maxTorque 0.25 } PositionSensor { name "rr_tibia_sensor" } ]
+                                endPoint Solid {
+                                  name "rr_tibia_link"
+                                  children [
+                                    Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Shape { appearance USE MatTibiaDark geometry Box { size 0.125 0.014 0.014 } } ] }
+                                    Transform { translation 0.090 0 -0.100 children [ TouchSensor { name "rr_foot" children [ Shape { appearance USE MatRubber geometry Sphere { radius 0.012 } } ] boundingObject Sphere { radius 0.012 } physics Physics { mass 0.010 } } ] }
+                                  ]
+                                  boundingObject Transform { translation 0.045 0 -0.050 rotation 0 1 0 -0.838 children [ Box { size 0.125 0.014 0.014 } ] }
+                                  physics Physics { mass 0.054 }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                        boundingObject Transform { translation 0.0375 0 0 children [ Box { size 0.075 0.018 0.018 } ] }
+                        physics Physics { mass 0.062 }
+                      }
+                    }
+                  ]
+                }
+              ]
+              boundingObject Transform { translation 0.020 0 0 children [ Box { size 0.040 0.022 0.025 } ] }
+              physics Physics { mass 0.048 }
+            }
+          }
+        ]
+      }
+    ]
+
+    # Main Body Collision and Physics
+    boundingObject Cylinder {
+      height 0.042
+      radius 0.110
+      subdivision 6
+    }
+    physics Physics {
+      density -1
+      mass 0.450
+      centerOfMass [ 0 0 0 ]
+    }
+  }
+}

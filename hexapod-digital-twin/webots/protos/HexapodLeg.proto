@@ -1,0 +1,179 @@
+PROTO HexapodLeg [
+  # -------------------------------------------------------
+  # Parameters
+  # -------------------------------------------------------
+  field  SFString  legName       "lf"     # leg prefix: lf, lm, lr, rf, rm, rr
+  field  SFFloat   attachX       -0.08    # body attachment X (metres)
+  field  SFFloat   attachY        0.0     # body attachment Y (metres)
+  field  SFFloat   attachZ        0.06    # body attachment Z (metres)
+  field  SFFloat   mirrorFactor   1.0     # +1 for left legs, -1 for right legs
+  # Coxa / Femur / Tibia lengths [PLACEHOLDER — tune per physical robot]
+  field  SFFloat   coxaLength     0.04
+  field  SFFloat   femurLength    0.06
+  field  SFFloat   tibiaLength    0.07
+  # Colors
+  field  SFColor   coxaColor      0.3 0.35 0.4
+  field  SFColor   femurColor     0.25 0.30 0.35
+  field  SFColor   tibiaColor     0.20 0.25 0.30
+  field  SFColor   footColor      0.8  0.60 0.00
+]
+{
+  # Root HingeJoint — Coxa (rotation around Z axis)
+  HingeJoint {
+    jointParameters HingeJointParameters {
+      axis 0 0 1
+      anchor IS attachX IS attachY IS attachZ
+    }
+    device [
+      RotationalMotor {
+        name IS legName  # will be overridden per-instance via DEF in .wbt
+        maxVelocity 3.0
+        maxTorque   0.5
+        minPosition -1.5708
+        maxPosition  1.5708
+        controlPID  10 0 0
+      }
+      PositionSensor {
+        name IS legName  # note: appended "_sensor" in controller code
+      }
+    ]
+    endPoint Solid {
+      translation IS attachX IS attachY IS attachZ
+      name IS legName
+      contactMaterial "leg"
+      children [
+
+        # Coxa visual
+        Shape {
+          appearance PBRAppearance {
+            baseColor IS coxaColor
+            roughness 0.5
+            metalness 0.6
+          }
+          geometry Box {
+            size IS coxaLength 0.012 0.012
+          }
+        }
+
+        # Femur HingeJoint (rotation around X axis)
+        HingeJoint {
+          jointParameters HingeJointParameters {
+            axis 1 0 0
+            anchor IS mirrorFactor IS attachY IS attachZ  # simplified placeholder
+          }
+          device [
+            RotationalMotor {
+              name IS legName
+              maxVelocity 3.0
+              maxTorque   0.5
+              minPosition -1.5708
+              maxPosition  1.5708
+              controlPID  10 0 0
+            }
+            PositionSensor {
+              name IS legName
+            }
+          ]
+          endPoint Solid {
+            name IS legName
+            children [
+
+              # Femur visual
+              Shape {
+                appearance PBRAppearance {
+                  baseColor IS femurColor
+                  roughness 0.5
+                  metalness 0.6
+                }
+                geometry Box {
+                  size IS femurLength 0.010 0.010
+                }
+              }
+
+              # Tibia HingeJoint
+              HingeJoint {
+                jointParameters HingeJointParameters {
+                  axis 1 0 0
+                }
+                device [
+                  RotationalMotor {
+                    name IS legName
+                    maxVelocity 3.0
+                    maxTorque   0.5
+                    minPosition -1.5708
+                    maxPosition  1.5708
+                    controlPID  10 0 0
+                  }
+                  PositionSensor {
+                    name IS legName
+                  }
+                ]
+                endPoint Solid {
+                  name IS legName
+                  contactMaterial "foot"
+                  children [
+                    # Tibia visual
+                    Shape {
+                      appearance PBRAppearance {
+                        baseColor IS tibiaColor
+                        roughness 0.6
+                        metalness 0.5
+                      }
+                      geometry Box {
+                        size IS tibiaLength 0.008 0.008
+                      }
+                    }
+                    # Foot sphere
+                    Shape {
+                      appearance PBRAppearance {
+                        baseColor IS footColor
+                        roughness 0.8
+                        metalness 0.0
+                      }
+                      geometry Sphere { radius 0.008 }
+                    }
+                    # Touch sensor — named <legName>_foot in controller
+                    TouchSensor {
+                      name IS legName
+                      type "bumper"
+                    }
+                  ]
+                  boundingObject Sphere { radius 0.009 }
+                  physics Physics { density -1 mass 0.020 }
+                }
+              }
+              # End Tibia
+
+            ]
+            boundingObject Box { size IS femurLength 0.010 0.010 }
+            physics Physics { density -1 mass 0.030 }
+          }
+        }
+        # End Femur
+
+      ]
+      boundingObject Box { size IS coxaLength 0.012 0.012 }
+      physics Physics { density -1 mass 0.030 }
+    }
+  }
+  # End Root HingeJoint
+}
+# -------------------------------------------------------
+# Usage example in .wbt:
+#
+#   HexapodLeg {
+#     legName     "lf"
+#     attachX     -0.08
+#     attachY      0.0
+#     attachZ      0.06
+#     mirrorFactor 1.0
+#   }
+#
+# NOTE: Because Webots PROTO IS-field forwarding for device
+#       names requires matching exactly one SFString field,
+#       the .wbt world file (hexapod.wbt) uses fully-inlined
+#       HingeJoint nodes instead of this PROTO to guarantee
+#       unique motor names. Use this PROTO as a template
+#       for custom tools or future Webots versions that
+#       support dynamic name formatting in PROTO fields.
+# -------------------------------------------------------

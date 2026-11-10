@@ -1,0 +1,84 @@
+# ==============================================================================
+# HEXAPOD MOTION DIGITAL TWIN (HEX-01) — ROBOT PHYSICAL & MECHANICAL PARAMETERS
+# ==============================================================================
+# NOTE: All mechanical parameters marked [ESTIMATED PARAMETERS] are realistic
+# engineering estimates based on micro-servo (MG90S/TowerPro) hexapod architectures.
+# They are centralized here and must be updated once CMM/CAD measurements are finalized.
+# ==============================================================================
+
+robot:
+  id: "HEX-01"
+  name: "HEXAPOD MOTION DIGITAL TWIN"
+  architecture: "6-Legged 18-DOF Articulated Mechatronic Platform"
+  firmware_hardware: "MakerBoard ESP32-WROOM-32 + MPU6050 + MG90S"
+
+# ------------------------------------------------------------------------------
+# CHASSIS & STRUCTURAL SPECIFICATIONS [ESTIMATED PARAMETERS]
+# ------------------------------------------------------------------------------
+chassis:
+  mass_kg: 0.450                     # Main chassis mass including plates, standoffs, PCB
+  body_radius_m: 0.110               # Radial distance from center of body to coxa pivots (110 mm)
+  body_height_m: 0.042               # Distance between lower and upper chassis plate (42 mm)
+  upper_plate_thickness_m: 0.0035    # 3.5 mm CNC aluminum / carbon fiber plate
+  lower_plate_thickness_m: 0.0035    # 3.5 mm CNC aluminum / carbon fiber plate
+  standoff_count: 6                  # 6 hexagonal connecting pillars
+  electronics_elevation_m: 0.048     # PCB elevation above ground datum
+
+# ------------------------------------------------------------------------------
+# LEG SEGMENT DIMENSIONS & MASS PROPERTIES [ESTIMATED PARAMETERS]
+# ------------------------------------------------------------------------------
+kinematics:
+  coxa_length_m: 0.052               # Coxa joint pivot to Femur joint pivot (52 mm)
+  femur_length_m: 0.075              # Femur joint pivot to Tibia joint pivot (75 mm)
+  tibia_length_m: 0.125              # Tibia joint pivot to Foot ground contact (125 mm)
+  foot_radius_m: 0.012               # Hemispherical rubber foot pad radius (12 mm)
+
+masses:
+  coxa_link_kg: 0.048                # Coxa bracket + servo casing + fasteners
+  femur_link_kg: 0.062               # Femur skeletonized truss + servo casing
+  tibia_link_kg: 0.054               # Tibia curved arch + rubber pad + hardware
+  servo_unit_kg: 0.0134              # Individual MG90S servo unit weight (~13.4g)
+  total_leg_mass_kg: 0.164           # Total per leg (6 legs = ~0.984 kg)
+  total_robot_mass_kg: 1.434         # Chassis + 6 legs (~1.43 kg)
+
+# ------------------------------------------------------------------------------
+# JOINT ACTUATOR & MOTOR SPECIFICATIONS (MG90S / METAL GEAR) [ESTIMATED PARAMETERS]
+# ------------------------------------------------------------------------------
+actuators:
+  servo_model: "TowerPro MG90S Micro Metal Gear Servo"
+  rated_voltage_v: 5.0
+  max_torque_nm: 0.216               # 2.2 kg*cm at 4.8V ≈ 0.216 N*m (stall torque)
+  max_velocity_rad_s: 10.47          # 0.10s / 60 deg ≈ 10.47 rad/s (600 deg/s)
+  joint_damping_coefficient: 0.02
+  gear_backlash_rad: 0.008
+
+joint_angular_limits_deg:
+  coxa:
+    min: -60.0
+    max: +60.0
+  femur:
+    min: -75.0
+    max: +75.0
+  tibia:
+    min: -120.0
+    max: +15.0
+
+# ------------------------------------------------------------------------------
+# NEUTRAL STABLE STANDING POSE [POSE_NEUTRAL_STAND]
+# ------------------------------------------------------------------------------
+# Stable hexagonal support base with ground contact at Z = 0
+pose_neutral_stand:
+  chassis_clearance_height_m: 0.095  # Height of body center above ground (95 mm)
+  joint_angles_deg:
+    coxa: 0.0                        # 0.0° relative to leg mounting radial angle
+    femur: 24.0                      # +24.0° angled upward/outward
+    tibia: -68.0                     # -68.0° angled downward to touch floor
+  foot_radial_distance_m: 0.218      # Distance from robot center to foot pads (218 mm)
+
+# ------------------------------------------------------------------------------
+# GROUND CONTACT & FRICTION PROPERTIES
+# ------------------------------------------------------------------------------
+environment:
+  gravity_m_s2: 9.80665
+  floor_friction_coulomb: 0.85       # High-friction rubber foot pad on industrial floor
+  floor_restitution: 0.05            # Non-bouncy contact

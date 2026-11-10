@@ -1,0 +1,81 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "../protos/HexapodDigitalTwin.proto"
+
+WorldInfo {
+  info [
+    "HEXAPOD MOTION DIGITAL TWIN (HEX-01)"
+    "Real-Time Cyber-Physical Digital Twin Platform"
+    "ESP32 WROOM-32 + MPU6050 + 18-DOF Articulated Hexapod"
+  ]
+  title "HEXAPOD MOTION DIGITAL TWIN"
+  basicTimeStep 8
+  FPS 60
+  contactProperties [
+    ContactProperties {
+      material1 "default"
+      material2 "default"
+      coulombFriction [ 0.85 ]
+      bounce 0.05
+    }
+  ]
+}
+
+Viewpoint {
+  orientation -0.32 0.28 0.90 2.25
+  position 0.45 -0.45 0.35
+  near 0.02
+  follow "HEX-01"
+}
+
+TexturedBackground {
+  texture "empty_office"
+}
+
+TexturedBackgroundLight {
+  texture "empty_office"
+  luminosity 0.8
+}
+
+DirectionalLight {
+  direction -0.5 0.5 -1
+  intensity 1.2
+  castShadows TRUE
+}
+
+PointLight {
+  attenuation 0 0 1
+  location 0 0 0.8
+  intensity 0.5
+}
+
+# Industrial Engineering Floor with Metric Grid
+Solid {
+  translation 0 0 -0.001
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.22 0.23 0.25
+        roughness 0.6
+        metalness 0.2
+      }
+      geometry Plane {
+        size 5 5
+      }
+    }
+  ]
+  boundingObject Plane {
+    size 5 5
+  }
+}
+
+# The 18-DOF Hexapod Digital Twin Robot
+HexapodDigitalTwin {
+  translation 0 0 0.095
+  rotation 0 0 1 0
+  name "HEX-01"
+  controller "hexapod_controller"
+}

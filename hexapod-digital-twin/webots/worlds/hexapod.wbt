@@ -1,0 +1,924 @@
+#VRML_SIM R2023b utf8
+# Hexapod Digital Twin — Webots World
+# Generated for Hexapod Digital Twin project
+
+WorldInfo {
+  title "Hexapod Digital Twin"
+  info [
+    "6-legged robot simulation"
+    "18 DoF hexapod with IMU, gyro, accelerometer"
+    "Controller: twin_controller"
+  ]
+  basicTimeStep 8
+  contactProperties [
+    ContactProperties {
+      material1 "floor"
+      material2 "foot"
+      coulombFriction [ 0.5 ]
+      softERP 0.2
+      softCFM 0.001
+    }
+  ]
+}
+
+Background {
+  skyColor [
+    0.1 0.1 0.12
+    0.08 0.08 0.1
+    0.05 0.05 0.07
+  ]
+  luminosity 0.3
+}
+
+DirectionalLight {
+  ambientIntensity 0.3
+  color 1 0.95 0.9
+  direction -0.5 -1 -0.3
+  intensity 1.2
+  castShadows TRUE
+}
+
+PointLight {
+  attenuation 0 0 1
+  color 0.6 0.7 1.0
+  intensity 0.8
+  location 0.5 1.0 0.5
+  castShadows FALSE
+}
+
+# Floor — infinite plane with ODE physics
+DEF FLOOR Solid {
+  contactMaterial "floor"
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.12 0.12 0.15
+        roughness 0.9
+        metalness 0.0
+      }
+      geometry Plane {
+        size 10 10
+      }
+    }
+  ]
+  boundingObject Plane {
+    size 10 10
+  }
+  physics Physics {
+    density -1
+    mass 0
+  }
+  locked TRUE
+}
+
+# Grid overlay for visual reference
+DEF GRID_LINES Shape {
+  appearance PBRAppearance {
+    baseColor 0.2 0.2 0.25
+    roughness 1.0
+    metalness 0.0
+    emissiveColor 0.05 0.05 0.08
+  }
+  geometry Plane {
+    size 5 5
+  }
+}
+
+# ===========================================================
+# HEXAPOD ROBOT
+# ===========================================================
+DEF HEXAPOD Robot {
+  translation 0 0.06 0
+  rotation 0 1 0 0
+  name "hexapod"
+  model "MakerBoard Hexapod MG90S"
+  controller "twin_controller"
+  supervisor FALSE
+  physics Physics {
+    density -1
+    mass 0.8
+    centerOfMass [ 0 0 0 ]
+    inertiaMatrix [
+      0.001 0.002 0.001
+      0 0 0
+    ]
+  }
+  boundingObject Box {
+    size 0.18 0.05 0.12
+  }
+  children [
+
+    # -------------------------------------------------------
+    # IMU / Gyro / Accelerometer
+    # -------------------------------------------------------
+    InertialUnit {
+      name "imu"
+      translation 0 0.015 0
+      rotation 0 1 0 0
+      noise 0.001
+      resolution -1
+    }
+    Gyro {
+      name "gyro"
+      translation 0 0.015 0
+      noise 0.001
+    }
+    Accelerometer {
+      name "accelerometer"
+      translation 0 0.015 0
+      noise 0.05
+    }
+
+    # -------------------------------------------------------
+    # BODY SHAPE
+    # -------------------------------------------------------
+    DEF BODY Shape {
+      appearance PBRAppearance {
+        baseColor 0.08 0.08 0.1
+        roughness 0.4
+        metalness 0.8
+        emissiveColor 0.02 0.02 0.04
+      }
+      geometry Box {
+        size 0.18 0.04 0.12
+      }
+    }
+
+    # Body center indicator
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.0 0.5 1.0
+        emissiveColor 0.0 0.3 0.8
+        metalness 0.0
+        roughness 0.2
+      }
+      geometry Sphere {
+        radius 0.008
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 1: LF (Left Front)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor -0.08 0 0.06
+      }
+      device [
+        RotationalMotor {
+          name "lf_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "lf_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.08 0 0.06
+        rotation 0 0 1 0
+        name "lf_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.3 0.35 0.4
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor -0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "lf_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "lf_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation -0.02 0 0
+              rotation 1 0 0 0
+              name "lf_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.25 0.3 0.35
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor -0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "lf_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "lf_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation -0.03 0 0
+                    rotation 1 0 0 0
+                    name "lf_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.2 0.25 0.3
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF LF_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.8 0.6 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "lf_foot"
+                        translation -0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 2: LM (Left Middle)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor -0.09 0 0.0
+      }
+      device [
+        RotationalMotor {
+          name "lm_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "lm_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.09 0 0.0
+        rotation 0 0 1 0
+        name "lm_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.3 0.35 0.4
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor -0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "lm_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "lm_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation -0.02 0 0
+              rotation 1 0 0 0
+              name "lm_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.25 0.3 0.35
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor -0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "lm_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "lm_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation -0.03 0 0
+                    rotation 1 0 0 0
+                    name "lm_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.2 0.25 0.3
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF LM_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.8 0.6 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "lm_foot"
+                        translation -0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 3: LR (Left Rear)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor -0.08 0 -0.06
+      }
+      device [
+        RotationalMotor {
+          name "lr_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "lr_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.08 0 -0.06
+        rotation 0 0 1 0
+        name "lr_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.3 0.35 0.4
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor -0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "lr_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "lr_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation -0.02 0 0
+              rotation 1 0 0 0
+              name "lr_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.25 0.3 0.35
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor -0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "lr_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "lr_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation -0.03 0 0
+                    rotation 1 0 0 0
+                    name "lr_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.2 0.25 0.3
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF LR_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.8 0.6 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "lr_foot"
+                        translation -0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 4: RF (Right Front)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.08 0 0.06
+      }
+      device [
+        RotationalMotor {
+          name "rf_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "rf_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.08 0 0.06
+        rotation 0 0 1 0
+        name "rf_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.4 0.3 0.35
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor 0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "rf_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "rf_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0.02 0 0
+              rotation 1 0 0 0
+              name "rf_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.35 0.25 0.3
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor 0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "rf_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "rf_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0.03 0 0
+                    rotation 1 0 0 0
+                    name "rf_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.3 0.2 0.25
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF RF_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 1.0 0.5 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "rf_foot"
+                        translation 0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 5: RM (Right Middle)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.09 0 0.0
+      }
+      device [
+        RotationalMotor {
+          name "rm_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "rm_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.09 0 0.0
+        rotation 0 0 1 0
+        name "rm_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.4 0.3 0.35
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor 0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "rm_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "rm_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0.02 0 0
+              rotation 1 0 0 0
+              name "rm_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.35 0.25 0.3
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor 0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "rm_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "rm_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0.03 0 0
+                    rotation 1 0 0 0
+                    name "rm_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.3 0.2 0.25
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF RM_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 1.0 0.5 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "rm_foot"
+                        translation 0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+    # -------------------------------------------------------
+    # LEG 6: RR (Right Rear)
+    # -------------------------------------------------------
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.08 0 -0.06
+      }
+      device [
+        RotationalMotor {
+          name "rr_coxa"
+          maxVelocity 3.0
+          maxTorque 0.5
+          minPosition -1.5708
+          maxPosition 1.5708
+          controlPID 10 0 0
+        }
+        PositionSensor {
+          name "rr_coxa_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.08 0 -0.06
+        rotation 0 0 1 0
+        name "rr_coxa_link"
+        contactMaterial "leg"
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.4 0.3 0.35
+              roughness 0.5
+              metalness 0.6
+            }
+            geometry Box { size 0.04 0.012 0.012 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 1 0 0
+              anchor 0.02 0 0
+            }
+            device [
+              RotationalMotor {
+                name "rr_femur"
+                maxVelocity 3.0
+                maxTorque 0.5
+                minPosition -1.5708
+                maxPosition 1.5708
+                controlPID 10 0 0
+              }
+              PositionSensor {
+                name "rr_femur_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0.02 0 0
+              rotation 1 0 0 0
+              name "rr_femur_link"
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    baseColor 0.35 0.25 0.3
+                    roughness 0.5
+                    metalness 0.6
+                  }
+                  geometry Box { size 0.06 0.01 0.01 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 1 0 0
+                    anchor 0.03 0 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "rr_tibia"
+                      maxVelocity 3.0
+                      maxTorque 0.5
+                      minPosition -1.5708
+                      maxPosition 1.5708
+                      controlPID 10 0 0
+                    }
+                    PositionSensor {
+                      name "rr_tibia_sensor"
+                    }
+                  ]
+                  endPoint Solid {
+                    translation 0.03 0 0
+                    rotation 1 0 0 0
+                    name "rr_tibia_link"
+                    contactMaterial "foot"
+                    children [
+                      Shape {
+                        appearance PBRAppearance {
+                          baseColor 0.3 0.2 0.25
+                          roughness 0.6
+                          metalness 0.5
+                        }
+                        geometry Box { size 0.07 0.008 0.008 }
+                      }
+                      DEF RR_FOOT_SHAPE Shape {
+                        appearance PBRAppearance {
+                          baseColor 1.0 0.5 0.0
+                          roughness 0.8
+                          metalness 0.0
+                        }
+                        geometry Sphere { radius 0.008 }
+                      }
+                      TouchSensor {
+                        name "rr_foot"
+                        translation 0.035 -0.004 0
+                        type "bumper"
+                      }
+                    ]
+                    boundingObject Sphere { radius 0.008 }
+                    physics Physics { density -1 mass 0.02 }
+                  }
+                }
+              ]
+              boundingObject Box { size 0.06 0.01 0.01 }
+              physics Physics { density -1 mass 0.03 }
+            }
+          }
+        ]
+        boundingObject Box { size 0.04 0.012 0.012 }
+        physics Physics { density -1 mass 0.03 }
+      }
+    }
+
+  ]
+  # End of HEXAPOD children
+}

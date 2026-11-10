@@ -1,0 +1,22 @@
+# ============================================================
+# shared/config/network.yaml
+#
+# Network topology for the Hexapod Digital Twin gateway.
+# ============================================================
+
+# Bind address for all listening sockets.
+# "0.0.0.0" listens on every available interface.
+gateway_host: "0.0.0.0"
+
+# WebSocket port — ESP32 firmware connects here (one client at a time).
+esp32_port: 8765
+
+# WebSocket port — visualiser clients connect here
+# (Three.js, Ursina, Pygame — multiple concurrent clients allowed).
+client_port: 8080
+
+# TCP port — Webots supervisor controller connects here.
+webots_port: 8766
+
+# Seconds between reconnection attempts for outbound connections.
+reconnect_interval_s: 2.0

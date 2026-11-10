@@ -1,0 +1,82 @@
+# ============================================================
+# shared/config/robot_params.yaml
+#
+# Physical parameters for the hexapod robot.
+#
+# IMPORTANT: Every numeric value in this file is marked
+# [PLACEHOLDER — not physically measured].  Replace each
+# value with data obtained from direct measurement, CAD
+# export, or manufacturer datasheet before using in
+# simulation or control calculations.
+# ============================================================
+
+# ── Body ────────────────────────────────────────────────────
+body:
+  mass_kg:    0.500   # [PLACEHOLDER — not physically measured]
+  width_m:    0.200   # [PLACEHOLDER — not physically measured]
+  length_m:   0.280   # [PLACEHOLDER — not physically measured]
+  height_m:   0.060   # [PLACEHOLDER — not physically measured]
+
+# ── Limb segments ────────────────────────────────────────────
+coxa:
+  mass_kg:    0.030   # [PLACEHOLDER — not physically measured]
+  length_m:   0.053   # [PLACEHOLDER — not physically measured]
+
+femur:
+  mass_kg:    0.040   # [PLACEHOLDER — not physically measured]
+  length_m:   0.066   # [PLACEHOLDER — not physically measured]
+
+tibia:
+  mass_kg:    0.025   # [PLACEHOLDER — not physically measured]
+  length_m:   0.132   # [PLACEHOLDER — not physically measured]
+
+# ── Servo actuators ──────────────────────────────────────────
+servo:
+  max_torque_nm:          1.800   # [PLACEHOLDER — not physically measured]
+  max_velocity_rad_s:     6.280   # [PLACEHOLDER — not physically measured]
+
+# ── Joint limits (radians) ───────────────────────────────────
+# Symmetric about neutral (0 rad) unless otherwise noted.
+joint_limits:
+  coxa:
+    min_rad:  -1.5708  # [PLACEHOLDER — not physically measured]  (~-90 deg)
+    max_rad:   1.5708  # [PLACEHOLDER — not physically measured]  (~ 90 deg)
+  femur:
+    min_rad:  -1.5708  # [PLACEHOLDER — not physically measured]
+    max_rad:   1.5708  # [PLACEHOLDER — not physically measured]
+  tibia:
+    min_rad:  -1.5708  # [PLACEHOLDER — not physically measured]
+    max_rad:   1.5708  # [PLACEHOLDER — not physically measured]
+
+# ── Leg attachment positions ─────────────────────────────────
+# Origin: geometric centre of the body frame.
+# Axes: x = forward, y = left, z = up.
+# All values are [PLACEHOLDER — not physically measured].
+leg_attachment_positions:
+  LF:   # Left-Front
+    x:  0.100   # [PLACEHOLDER — not physically measured]
+    y:  0.080   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+  RF:   # Right-Front
+    x:  0.100   # [PLACEHOLDER — not physically measured]
+    y: -0.080   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+  LM:   # Left-Middle
+    x:  0.000   # [PLACEHOLDER — not physically measured]
+    y:  0.100   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+  RM:   # Right-Middle
+    x:  0.000   # [PLACEHOLDER — not physically measured]
+    y: -0.100   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+  LR:   # Left-Rear
+    x: -0.100   # [PLACEHOLDER — not physically measured]
+    y:  0.080   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+  RR:   # Right-Rear
+    x: -0.100   # [PLACEHOLDER — not physically measured]
+    y: -0.080   # [PLACEHOLDER — not physically measured]
+    z:  0.000   # [PLACEHOLDER — not physically measured]
+
+# ── Ground contact / friction ────────────────────────────────
+friction_coefficient: 0.600   # [PLACEHOLDER — not physically measured]

@@ -1,0 +1,34 @@
+# PlatformIO build
+.pio/
+
+# Python Virtual Environments & Cache
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js dependencies & builds
+node_modules/
+**/node_modules/
+dist/
+dist-ssr/
+release/
+
+# Temporary and backup directories
+.vs/
+backup_before_desktop_twin/
+_backup_before_realtime_upgrade/
+recordings/
+graphify-out/
+logs/*.log
+
+# Editor files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
