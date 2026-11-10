@@ -29,14 +29,6 @@ Ce projet implémente une double plateforme d'ingénierie avancée associant **R
 
 ---
 
-## 📸 Galerie & Visualisation du Système
-
-### 1. Capture d'Inspection Optique Temps Réel (OpenCV)
-Contrôle qualité automatisé sur pièces transitant sur la ligne de convoyage avec calcul de circularité et classification d'état :
-![OpenCV Inspection Capture](docs/images/last_inspection.jpg)
-
----
-
 ## 🏗️ Architecture Globale & Flux de Données
 
 ```mermaid
